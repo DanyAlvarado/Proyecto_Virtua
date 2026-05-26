@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: trip_planner_db
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "27017:27017"   # ← Agrega esta línea
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - trip_network
+
+  backend:
+    build: ./backend
+    container_name: trip_planner_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5005:5000"
+    networks:
+      - trip_network
+    depends_on:
+      - mongo
+
+  frontend:
+    build: ./frontend
+    container_name: trip_planner_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    networks:
+      - trip_network
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
+    name: trip_planner_vol
+
+networks:
+  trip_network:
+    driver: bridge

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planificador de Viajes</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input { padding: 8px; margin: 5px 0; width: calc(100% - 16px); }
+        button { padding: 8px 12px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button.delete { background: #dc3545; }
+        button.edit { background: #ffc107; color: black; }
+        .trip-item { border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <h2>✈️ Mi Planificador de Viajes</h2>
+        
+        <div>
+            <input type="text" v-model="formulario.destino" placeholder="Ej. Barcelona, España">
+            <input type="date" v-model="formulario.fecha">
+            <button v-if="!editandoId" @click="crearViaje">Agregar Viaje</button>
+            <button v-else @click="guardarEdicion">Guardar Cambios</button>
+            <button v-if="editandoId" @click="cancelarEdicion" style="background: #6c757d;">Cancelar</button>
+        </div>
+
+        <hr style="margin: 20px 0;">
+
+        <div v-if="viajes.length === 0">No hay viajes planificados.</div>
+        <div class="trip-item" v-for="viaje in viajes" :key="viaje.id">
+            <div>
+                <strong>{{ viaje.destino }}</strong> <br>
+                <small>{{ viaje.fecha }}</small>
+            </div>
+            <div>
+                <button class="edit" @click="prepararEdicion(viaje)">Editar</button>
+                <button class="delete" @click="eliminarViaje(viaje.id)">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                const viajes = ref([]);
+                const API_URL = 'http://localhost:5005/trips';
+                const formulario = ref({ destino: '', fecha: '' });
+                const editandoId = ref(null);
+
+                const obtenerViajes = async () => {
+                    const res = await fetch(API_URL);
+                    viajes.value = await res.json();
+                };
+
+                const crearViaje = async () => {
+                    if (!formulario.value.destino || !formulario.value.fecha) return;
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formulario.value)
+                    });
+                    formulario.value = { destino: '', fecha: '' };
+                    obtenerViajes();
+                };
+
+                const eliminarViaje = async (id) => {
+                    await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                    obtenerViajes();
+                };
+
+                const prepararEdicion = (viaje) => {
+                    formulario.value = { destino: viaje.destino, fecha: viaje.fecha };
+                    editandoId.value = viaje.id;
+                };
+
+                const guardarEdicion = async () => {
+                    await fetch(`${API_URL}/${editandoId.value}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formulario.value)
+                    });
+                    formulario.value = { destino: '', fecha: '' };
+                    editandoId.value = null;
+                    obtenerViajes();
+                };
+
+                const cancelarEdicion = () => {
+                    formulario.value = { destino: '', fecha: '' };
+                    editandoId.value = null;
+                };
+
+                onMounted(obtenerViajes);
+
+                return { viajes, formulario, editandoId, crearViaje, eliminarViaje, prepararEdicion, guardarEdicion, cancelarEdicion };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
