@@ -2,17 +2,16 @@ version: '3.8'
 
 services:
   mongo:
-    image: mongo:latest
+    image: mongo:7.0
     container_name: trip_planner_db
     restart: unless-stopped
     env_file:
       - .env
-    ports:
-      - "27017:27017"   
     volumes:
       - mongo_data:/data/db
     networks:
-      - trip_network
+      trip_network:
+        ipv4_address: 10.21.21.30
 
   backend:
     build: ./backend
@@ -21,9 +20,10 @@ services:
     env_file:
       - .env
     ports:
-      - "5005:5000"
+      - "5572:5572"
     networks:
-      - trip_network
+      trip_network:
+        ipv4_address: 10.21.21.20
     depends_on:
       - mongo
 
@@ -34,7 +34,8 @@ services:
     ports:
       - "80:80"
     networks:
-      - trip_network
+      trip_network:
+        ipv4_address: 10.21.21.10
     depends_on:
       - backend
 
@@ -45,3 +46,6 @@ volumes:
 networks:
   trip_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 10.21.21.0/24

@@ -7,10 +7,8 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# Configuración de MongoDB usando variables de entorno y nombre de servicio
 MONGO_USER = os.getenv('MONGO_INITDB_ROOT_USERNAME')
 MONGO_PASS = os.getenv('MONGO_INITDB_ROOT_PASSWORD')
-# 'mongo' es el nombre del servicio en docker-compose
 client = MongoClient(f"mongodb://{MONGO_USER}:{MONGO_PASS}@mongo:27017/")
 db = client.planificador_viajes
 trips_collection = db.viajes
@@ -51,4 +49,4 @@ def delete_trip(id):
     return jsonify({"status": "Viaje eliminado"})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5572)
