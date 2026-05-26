@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: proyecto_jose_alvarado_1047222-frontend:latest
-          imagePullPolicy: Never
+          image: host.docker.internal:5001/frontend:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
 ---
